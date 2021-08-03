@@ -1,6 +1,7 @@
 'use strict';
 const archiver = require('archiver');
-const { S3Client } = require('@aws-sdk/client-s3');
+const { PassThrough } = require('stream');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { GetObjectCommand, ListObjectsCommand } = require('@aws-sdk/client-s3');
 
 /**
@@ -40,9 +41,26 @@ const downloadObject = async (client, bucket, inputPath) => {
   return res.Body;
 };
 
-setInterval(() => {
-  console.log('mem', process.memoryUsage().heapUsed / 1024 / 1024);
-}, 2000);
+/**
+ *
+ * @param {S3Client} client
+ * @param {string} bucket
+ * @param {String} inputPath
+ * @param {Readable} stream
+ */
+const uploadObject = async (client, bucket, outputPath, stream) => {
+  const res = await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: outputPath,
+      Body: stream,
+    })
+  );
+};
+
+// setInterval(() => {
+//   console.log('mem', process.memoryUsage().heapUsed / 1024 / 1024);
+// }, 2000);
 /**
  *
  * @param {string} bucket
@@ -84,8 +102,16 @@ const zipStream = async (bucket, inputPath, outputPath) => {
   outStream.on('entry', (entry) => {
     console.log('Working on entry: ', entry.name);
   });
-  outStream.pipe(require('fs').createWriteStream('./test.zip'));
-  
+  // outStream.pipe(require('fs').createWriteStream('./test.zip'));
+  const passThrough = new PassThrough();
+  outStream.pipe(passThrough);
+  const uploadTask = uploadObject(
+    s3Client,
+    bucket,
+    outputPath,
+    passThrough
+  );
+
   // await Promise.all(
   //   files.map(async (file) => {
   //     (await downloadObject(s3Client, bucket, file)).pipe(require('fs').createWriteStream(file))
@@ -100,6 +126,7 @@ const zipStream = async (bucket, inputPath, outputPath) => {
     )
   );
   await outStream.finalize();
+  await uploadTask;
 };
 
 module.exports = zipStream;
