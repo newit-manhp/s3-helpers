@@ -1,0 +1,29 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Launch Program",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "env": {
+        "AWS_REGION":"ap-northeast-1",
+        "AWS_ACCESS_KEY_ID":"dev",
+        "AWS_SECRET_ACCESS_KEY":"dev",
+        "AWS_S3_ENDPOINT":"http://10.211.55.3:4566"
+      },
+      "args": [
+        "zip", "-b" ,"odawara-development", "-i", "ngwords-report/" , "-o", "ngwords-report/report.zip"
+      ],
+      "program": "${workspaceFolder}/index.js",
+      "outFiles": [
+        "${workspaceFolder}/**/*.js"
+      ]
+    }
+  ]
+}
